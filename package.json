@@ -1,0 +1,23 @@
+{
+  "name": "allex_saltandhashlib",
+  "version": "1.0.0",
+  "description": "AllexJS lib for salt and hash password",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.hers.rs:allex_libs/saltandhash.git"
+  },
+  "devDependencies": {
+    "chai": "3.x"
+  },
+  "keywords": [
+    "ecosystem:AllexJS",
+    "hashandsalt",
+    "lib"
+  ],
+  "author": "HERS Belgrade",
+  "license": "ISC"
+}
