@@ -16,6 +16,21 @@ describe('Testing Sync SaltAndHash lib',function(){
     expect(buf.Buffer.byteLength(myCryptedPassword)).to.be.equal(512);
     expect(mySalt.length).to.be.equal(172);
   });
+
+  it('saltAndHashSync (with retObj)', function(){
+    var retObj = lib.saltAndHashSync(myPassword,{});
+    myCryptedPassword = retObj.cryptedPassword;
+    mySalt = retObj.salt;
+    expect(buf.Buffer.isBuffer(myCryptedPassword)).to.be.equal.true;
+    expect(buf.Buffer.byteLength(myCryptedPassword)).to.be.equal(512);
+    expect(mySalt.length).to.be.equal(172);
+  });
+
+  it('saltAndHashSync (throwing)', function(){
+    expect(lib.saltAndHashSync.bind(null,true,{})).to.throw(Error, /password is not string/);
+    expect(lib.saltAndHashSync.bind(null,myPassword,true)).to.throw(Error, /is not an object/);
+  });
+
   it('saltAndHashSync (for other password)', function(){
     var retObj = lib.saltAndHashSync('OTHER_PASSWORD_123456789');
     var cryptedPass = retObj.cryptedPassword;
@@ -24,12 +39,15 @@ describe('Testing Sync SaltAndHash lib',function(){
     expect(buf.Buffer.byteLength(cryptedPass)).to.be.equal(512);
     expect(salt.length).to.be.equal(172);
   });
+
   it('verifyPasswordSync (successfully)', function(){
     expect(lib.verifyPasswordSync(myPassword,mySalt,myCryptedPassword)).to.be.true;
   });
+
   it('verifyPasswordSync (unsuccessfully, bad password)', function(){
     expect(lib.verifyPasswordSync('BAD_PASSWORD',mySalt,myCryptedPassword)).to.be.false;
   });
+
   it('verifyPasswordSync (unsuccessfully, bad salt)', function(){
     expect(lib.verifyPasswordSync(myPassword,'BAD_SALT',myCryptedPassword)).to.be.false;
   });
@@ -73,6 +91,20 @@ describe('Testing Async SaltAndHash lib',function(){
 
   it('saltAndHash', function(done){
     var p = lib.saltAndHash(myPassword);
+    p.then(
+      onSuccess.bind(null,done),
+      onError.bind(null,done)
+    );
+  });
+
+  it('saltAndHash (throwing)', function(){
+    expect(lib.saltAndHash.bind(null,true,{})).to.throw(Error, /password is not string/);
+    expect(lib.saltAndHash.bind(null,myPassword,true)).to.throw(Error, /is not an object/);
+  });
+
+
+  it('saltAndHash (with retObj)', function(done){
+    var p = lib.saltAndHash(myPassword,{});
     p.then(
       onSuccess.bind(null,done),
       onError.bind(null,done)

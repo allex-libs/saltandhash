@@ -28,36 +28,49 @@ function createLib(execlib){
     //Genric method
   }
 
-  function onSaltAndHash(salt,defer,error,derivedKey){
+  function onSaltAndHash(salt,defer,ret,error,derivedKey){
     if (!!error){
       defer.reject(error);
       salt = null;
       defer = null;
       return;
     }
-    var ret = {
-      cryptedPassword : derivedKey,
-      salt : salt
-    };
+    ret.cryptedPassword = derivedKey;
+    ret.salt = salt;
     defer.resolve(ret);
     salt = null;
     defer = null;
   }
 
-  function saltAndHash(password){
-    var d = q.defer();
-    var salt = crypto.randomBytes(128).toString('base64');
-    _saltAndHash512(password,salt,onSaltAndHash.bind(null,salt,d));
+  function saltAndHash(password,retObj){
+    var d,salt,ret;
+    if (!lib.isString(password)){
+      throw new lib.Error('PASSWORD_NOT_STRING','Given password is not string');
+    }
+    if (lib.defined(retObj) && 'object' !== typeof retObj){
+      throw new lib.Error('RETOBJ_NOT_OBJECT','Given retObj is not an object');
+    }
+    d = q.defer();
+    salt = crypto.randomBytes(128).toString('base64');
+    ret = retObj || {};
+    _saltAndHash512(password,salt,onSaltAndHash.bind(null,salt,d,ret));
     return d.promise;
   }
   
-  function saltAndHashSync(password){
+  function saltAndHashSync(password,retObj){
+    var salt,cryptedPassword,ret;
+    if (!lib.isString(password)){
+      throw new lib.Error('PASSWORD_NOT_STRING','Given password is not string');
+    }
+    if (lib.defined(retObj) && 'object' !== typeof retObj){
+      throw new lib.Error('RETOBJ_NOT_OBJECT','Given retObj is not an object');
+    }
     var salt = crypto.randomBytes(128).toString('base64');
     var cryptedPassword = _saltAndHashSync512(password,salt);
-    return {
-      cryptedPassword : cryptedPassword,
-      salt : salt
-    };
+    var ret = retObj || {};
+    ret.cryptedPassword = cryptedPassword;
+    ret.salt = salt;
+    return ret;
   }
 
   function onVerifiedPassword(cryptedPassword,defer,error,derivedKey){
