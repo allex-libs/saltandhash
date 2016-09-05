@@ -28,47 +28,49 @@ function createLib(execlib){
     //Genric method
   }
 
-  function onSaltAndHash(salt,defer,ret,error,derivedKey){
+  function onSaltAndHash(salt,defer,ret,passwordField,error,derivedKey){
     if (!!error){
       defer.reject(error);
       salt = null;
       defer = null;
       return;
     }
-    ret.cryptedPassword = derivedKey;
+    ret[passwordField] = derivedKey;
     ret.salt = salt;
     defer.resolve(ret);
     salt = null;
     defer = null;
   }
 
-  function saltAndHash(password,retObj){
-    var d,salt,ret;
+  function saltAndHash(password,retObj,passwordFieldName){
+    var d,salt,ret,passwordField;
     if (!lib.isString(password)){
       throw new lib.Error('PASSWORD_NOT_STRING','Given password is not string');
     }
     if (lib.defined(retObj) && 'object' !== typeof retObj){
       throw new lib.Error('RETOBJ_NOT_OBJECT','Given retObj is not an object');
     }
+    passwordField = passwordFieldName || 'cryptedPassword';
     d = q.defer();
     salt = crypto.randomBytes(128).toString('base64');
     ret = retObj || {};
-    _saltAndHash512(password,salt,onSaltAndHash.bind(null,salt,d,ret));
+    _saltAndHash512(password,salt,onSaltAndHash.bind(null,salt,d,ret,passwordField));
     return d.promise;
   }
   
-  function saltAndHashSync(password,retObj){
-    var salt,cryptedPassword,ret;
+  function saltAndHashSync(password,retObj,passwordFieldName){
+    var salt,cryptedPassword,ret,passwordField;
     if (!lib.isString(password)){
       throw new lib.Error('PASSWORD_NOT_STRING','Given password is not string');
     }
     if (lib.defined(retObj) && 'object' !== typeof retObj){
       throw new lib.Error('RETOBJ_NOT_OBJECT','Given retObj is not an object');
     }
-    var salt = crypto.randomBytes(128).toString('base64');
-    var cryptedPassword = _saltAndHashSync512(password,salt);
-    var ret = retObj || {};
-    ret.cryptedPassword = cryptedPassword;
+    passwordField = passwordFieldName || 'cryptedPassword';
+    salt = crypto.randomBytes(128).toString('base64');
+    cryptedPassword = _saltAndHashSync512(password,salt);
+    ret = retObj || {};
+    ret[passwordField] = cryptedPassword;
     ret.salt = salt;
     return ret;
   }

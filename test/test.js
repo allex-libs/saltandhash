@@ -26,6 +26,15 @@ describe('Testing Sync SaltAndHash lib',function(){
     expect(mySalt.length).to.be.equal(172);
   });
 
+  it('saltAndHashSync (with retObj and passwordFieldName)', function(){
+    var retObj = lib.saltAndHashSync(myPassword,{},'myPass');
+    myCryptedPassword = retObj.myPass;
+    mySalt = retObj.salt;
+    expect(buf.Buffer.isBuffer(myCryptedPassword)).to.be.equal.true;
+    expect(buf.Buffer.byteLength(myCryptedPassword)).to.be.equal(512);
+    expect(mySalt.length).to.be.equal(172);
+  });
+
   it('saltAndHashSync (throwing)', function(){
     expect(lib.saltAndHashSync.bind(null,true,{})).to.throw(Error, /password is not string/);
     expect(lib.saltAndHashSync.bind(null,myPassword,true)).to.throw(Error, /is not an object/);
@@ -58,6 +67,15 @@ describe('Testing Async SaltAndHash lib',function(){
 
   function onSuccess(done,retObj){
     myCryptedPassword = retObj.cryptedPassword;
+    mySalt = retObj.salt;
+    expect(buf.Buffer.isBuffer(myCryptedPassword)).to.be.equal.true;
+    expect(buf.Buffer.byteLength(myCryptedPassword)).to.be.equal(512);
+    expect(mySalt.length).to.be.equal(172);
+    done();
+  }
+
+  function onSuccessPFN(done,pfn,retObj){
+    myCryptedPassword = retObj[pfn];
     mySalt = retObj.salt;
     expect(buf.Buffer.isBuffer(myCryptedPassword)).to.be.equal.true;
     expect(buf.Buffer.byteLength(myCryptedPassword)).to.be.equal(512);
@@ -102,11 +120,19 @@ describe('Testing Async SaltAndHash lib',function(){
     expect(lib.saltAndHash.bind(null,myPassword,true)).to.throw(Error, /is not an object/);
   });
 
-
   it('saltAndHash (with retObj)', function(done){
     var p = lib.saltAndHash(myPassword,{});
     p.then(
       onSuccess.bind(null,done),
+      onError.bind(null,done)
+    );
+  });
+
+  it('saltAndHash (with retObj and passwordFieldName)', function(done){
+    var pfn = 'myPass';
+    var p = lib.saltAndHash(myPassword,{},pfn);
+    p.then(
+      onSuccessPFN.bind(null,done,pfn),
       onError.bind(null,done)
     );
   });
