@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@gitlab.hers.rs:allex_libs/saltandhash.git"
+    "url": "git@github.com:allex-libs/saltandhash.git"
   },
   "devDependencies": {
     "chai": "3.x"
