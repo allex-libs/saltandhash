@@ -233,4 +233,8 @@ describe('Testing Outer SaltAndHash lib',function(){
       onError.bind(null,done)
     );
   });
+
+  it ('Release Lib', function () {
+    lib.release();
+  });
 });

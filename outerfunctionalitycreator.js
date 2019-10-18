@@ -84,10 +84,17 @@ function createOuterFunctionality (execlib) {
     cb = null;
     return ret;
   }
+
+  function release () {
+    if (_outerprocess) {
+      _outerprocess.kill();
+    }
+  }
   
   return {
     saltAndHash512Outer: _saltAndHash512Outer,
     saltAndHashOuter: _saltAndHashOuter,
+    release: release
   };
 }
 module.exports = createOuterFunctionality;

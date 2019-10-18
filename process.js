@@ -1,5 +1,3 @@
-console.log('alive');
-
 var crypto = require('./crypto');
 
 process.on('message', onMessage);

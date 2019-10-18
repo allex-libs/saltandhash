@@ -115,7 +115,8 @@ function createLib(execlib){
     saltAndHashSync : saltAndHashSync,
     verifyPasswordOuter : verifyPasswordOuter,
     verifyPassword : verifyPassword,
-    verifyPasswordSync : verifyPasswordSync
+    verifyPasswordSync : verifyPasswordSync,
+    release : outerFunctionality.release
   };
 }
 
