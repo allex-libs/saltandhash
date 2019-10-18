@@ -1,32 +1,10 @@
 function createLib(execlib){
   'use strict';
-  var crypto = require('crypto');
+  var crypto = require('./crypto');
+  var outerFunctionality = require('./outerfunctionalitycreator')(execlib);
   var lib = execlib.lib,
     q = lib.q,
     qlib = lib.qlib;
-
-  function _saltAndHash512(password,salt,cb){
-    crypto.pbkdf2(password,salt,10000,512,'sha512',cb);
-    //The supplied callback function is called with two arguments: err and derivedKey.
-    //If an error occurs, err will be set; otherwise err will be null.
-    //The successfully generated derivedKey will be passed as a Buffer.
-  }
-
-  function _saltAndHash(password,salt,iterations,keylen,digest,cb){
-    crypto.pbkdf2(password,salt,iterations,keylen,digest,cb);
-    //Genric method
-  }
-
-  function _saltAndHashSync512(password,salt){
-    return crypto.pbkdf2Sync(password,salt,10000,512,'sha512');
-    //If an error occurs an Error will be thrown,
-    //otherwise the derived key will be returned as a Buffer.
-  }
-
-  function _saltAndHashSync(password,salt,iterations,keylen,digest){
-    return crypto.pbkdf2Sync(password,salt,iterations,keylen,digest);
-    //Genric method
-  }
 
   function onSaltAndHash(salt,defer,ret,passwordField,error,derivedKey){
     if (!!error){
@@ -42,6 +20,22 @@ function createLib(execlib){
     defer = null;
   }
 
+  function saltAndHashOuter(password,retObj,passwordFieldName){
+    var d,salt,ret,passwordField;
+    if (!lib.isString(password)){
+      throw new lib.Error('PASSWORD_NOT_STRING','Given password is not string');
+    }
+    if (lib.defined(retObj) && 'object' !== typeof retObj){
+      throw new lib.Error('RETOBJ_NOT_OBJECT','Given retObj is not an object');
+    }
+    passwordField = passwordFieldName || 'cryptedPassword';
+    d = q.defer();
+    salt = crypto.salt();
+    ret = retObj || {};
+    outerFunctionality.saltAndHash512Outer(password,salt,onSaltAndHash.bind(null,salt,d,ret,passwordField));
+    return d.promise;
+  }
+  
   function saltAndHash(password,retObj,passwordFieldName){
     var d,salt,ret,passwordField;
     if (!lib.isString(password)){
@@ -52,9 +46,9 @@ function createLib(execlib){
     }
     passwordField = passwordFieldName || 'cryptedPassword';
     d = q.defer();
-    salt = crypto.randomBytes(128).toString('base64');
+    salt = crypto.salt();
     ret = retObj || {};
-    _saltAndHash512(password,salt,onSaltAndHash.bind(null,salt,d,ret,passwordField));
+    crypto.saltAndHash512(password,salt,onSaltAndHash.bind(null,salt,d,ret,passwordField));
     return d.promise;
   }
   
@@ -67,8 +61,8 @@ function createLib(execlib){
       throw new lib.Error('RETOBJ_NOT_OBJECT','Given retObj is not an object');
     }
     passwordField = passwordFieldName || 'cryptedPassword';
-    salt = crypto.randomBytes(128).toString('base64');
-    cryptedPassword = _saltAndHashSync512(password,salt);
+    salt = crypto.salt();
+    cryptedPassword = crypto.saltAndHashSync512(password,salt);
     ret = retObj || {};
     ret[passwordField] = cryptedPassword;
     ret.salt = salt;
@@ -95,22 +89,31 @@ function createLib(execlib){
     }
   }
 
+  function verifyPasswordOuter(password,salt,cryptedPassword){
+    //acepts buffers as password and cryptedPassword
+    var d = q.defer();
+    outerFunctionality.saltAndHash512Outer(password,salt,onVerifiedPassword.bind(null,cryptedPassword,d));
+    return d.promise;
+  }
+
   function verifyPassword(password,salt,cryptedPassword){
     //acepts buffers as password and cryptedPassword
     var d = q.defer();
-    _saltAndHash512(password,salt,onVerifiedPassword.bind(null,cryptedPassword,d));
+    crypto.saltAndHash512(password,salt,onVerifiedPassword.bind(null,cryptedPassword,d));
     return d.promise;
   }
 
   function verifyPasswordSync(password,salt,cryptedPassword){
-    var newCryptedPassword = _saltAndHashSync512(password,salt);
+    var newCryptedPassword = crypto.saltAndHashSync512(password,salt);
     return newCryptedPassword.equals(cryptedPassword);
   }
 
 
   return {
+    saltAndHashOuter : saltAndHashOuter,
     saltAndHash : saltAndHash,
     saltAndHashSync : saltAndHashSync,
+    verifyPasswordOuter : verifyPasswordOuter,
     verifyPassword : verifyPassword,
     verifyPasswordSync : verifyPasswordSync
   };
